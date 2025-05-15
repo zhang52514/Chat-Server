@@ -1,0 +1,42 @@
+server:
+ port: 8080
+ servlet:
+   context-path: /
+# redis
+spring:
+  data:
+    redis:
+      host: aly.anoxia.cn
+      port: 6379
+      database: 1
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: 1000ms
+  datasource:
+    url: jdbc:mysql://anoxia.cn:3306/chat_db?useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: 2023@Zjn
+  jackson:
+    time-zone: Asia/Shanghai
+
+# 日志配置
+logging:
+  level:
+    cn.anoxia.chat: debug
+    org.springframework: warn
+
+# MyBatis
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configLocation: classpath:mybatis/mybatis-config.xml
+
+jwt:
+  secret: MySuperSecretKeyForJWT2025!
+  expire: 3600       # 单位：秒
+  header: Authorization
+  prefix: Bearer
+  redis-prefix: auth_token_
