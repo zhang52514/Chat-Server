@@ -3,6 +3,7 @@ package cn.anoxia.chat.common.domain;
 import cn.anoxia.chat.common.domain.dto.RequestDto;
 import cn.anoxia.chat.common.enmu.MessageStatus;
 import cn.anoxia.chat.common.enmu.MessageType;
+import cn.anoxia.chat.core.handler.auth.AuthRequired;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,7 +16,7 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString
-public class ChatMessage  extends RequestDto {
+public class ChatMessage  extends RequestDto implements AuthRequired {
     private String messageId;    // 消息ID
     private String senderId;    // 发送者ID
     private String receiverId;  // 接收者ID
@@ -26,4 +27,9 @@ public class ChatMessage  extends RequestDto {
     private String roomId;;  //聊天房间
     private List<String> read;  // 存储已读消息的接收者ID列表
     private Map<String, Object> metadata; //附加信息
+
+    @Override
+    public String getToken() {
+        return super.getToken();
+    }
 }

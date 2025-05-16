@@ -1,6 +1,7 @@
 package cn.anoxia.chat.common.domain;
 
 import cn.anoxia.chat.common.domain.dto.RequestDto;
+import cn.anoxia.chat.core.handler.auth.AuthRequired;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -8,7 +9,7 @@ import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class HttpMessage extends RequestDto {
+public class HttpMessage extends RequestDto implements AuthRequired {
     //请求路径
     private String path;
 
@@ -17,4 +18,9 @@ public class HttpMessage extends RequestDto {
 
     //token
     private String token;
+
+    @Override
+    public String getToken() {
+        return token;
+    }
 }

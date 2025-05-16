@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket 测试工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
+
+<div class="bg-white rounded-2xl shadow-xl p-8 max-w-3xl w-full">
+    <h1 class="text-3xl font-bold mb-6 text-center text-blue-600">WebSocket 测试页面</h1>
+
+    <div class="space-y-4">
+        <div>
+            <label class="block mb-1 text-gray-700 font-semibold">服务器地址</label>
+            <input id="wsUrl" type="text" value="ws://127.0.0.1:8081/chat" placeholder="例如 ws://localhost:8080/ws"
+                   class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"/>
+        </div>
+
+        <div class="flex space-x-4">
+            <button onclick="connectWebSocket()"
+                    class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-xl w-1/2">连接
+            </button>
+            <button onclick="disconnectWebSocket()"
+                    class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-xl w-1/2">断开连接
+            </button>
+        </div>
+
+        <div>
+            <label class="block mb-1 text-gray-700 font-semibold">发送消息</label>
+            <input id="messageInput" type="text" placeholder="输入要发送的消息"
+                   class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"/>
+        </div>
+
+        <button onclick="sendMessage()"
+                class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl">发送消息
+        </button>
+        <button onclick="sendHttpMessage()"
+                class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl">发送消息
+        </button>
+        <button onclick="ReadMessage()"
+                class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl">已读回执
+        </button>
+        <button onclick="sendFiles()"
+                class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl">模拟发送文件
+        </button>
+        <button onclick="sendMetadata()"
+                class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl">发送Metadata
+        </button>
+
+        <div class="mt-6">
+            <h2 class="text-2xl font-bold mb-2 text-gray-700">消息记录</h2>
+            <div id="messages"
+                 class="bg-gray-50 h-64 overflow-y-auto p-4 rounded-lg border space-y-2 text-sm font-mono">
+                <!-- 消息会显示在这里 -->
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let socket;
+    let token;
+
+    function logMessage(type, message) {
+        const messages = document.getElementById('messages');
+        const time = new Date().toLocaleTimeString();
+        const entry = document.createElement('div');
+        entry.innerHTML = `<span class="font-bold text-${type === 'SEND' ? 'blue' : type === 'RECEIVE' ? 'green' : 'red'}-500">[${time}] [${type}]</span> ${message}`;
+        messages.appendChild(entry);
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+    function connectWebSocket() {
+        const url = document.getElementById('wsUrl').value;
+        if (!url) {
+            alert('请输入服务器地址');
+            return;
+        }
+        socket = new WebSocket(url);
+
+        socket.onopen = function () {
+            const connectMessageObject = {
+                'cmd': 'auth',
+                'userName': 'admin',
+                'userPwd': '123133131'
+            };
+            socket.send(JSON.stringify(connectMessageObject));
+            logMessage('SYSTEM', '连接成功');
+        };
+
+        socket.onmessage = function (event) {
+            console.log('Received message:', event.data);
+            let message = JSON.parse(event.data);
+            if (token == null && message.data.cmd === 'auth') {
+                token = message.data.key;
+            }
+
+            logMessage('RECEIVE', event.data);
+        };
+
+        socket.onerror = function (error) {
+            logMessage('SYSTEM', '连接发生错误');
+        };
+
+        socket.onclose = function () {
+            logMessage('SYSTEM', '连接已关闭');
+        };
+    }
+
+    function disconnectWebSocket() {
+        if (socket) {
+            socket.close();
+        }
+    }
+
+    function ReadMessage() {
+
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+            alert('WebSocket未连接');
+            return;
+        }
+        const room = {
+            'roomId': 16,
+            'assessmentId': 'testguan4',
+            'roomType': 4
+        }
+        const MessageObject = {
+            'room': room,
+            'senderId': 'Sd22b07',
+            'read': ['20250428-000003', '20250428-000004', '20250428-000005']
+        };
+
+        socket.send(JSON.stringify(MessageObject));
+        logMessage('SEND', "发送已读回执");
+    }
+
+    function sendMessage() {
+        const message = document.getElementById('messageInput').value;
+        if (!message) {
+            alert('请输入要发送的消息');
+            return;
+        }
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+            alert('WebSocket未连接');
+            return;
+        }
+        const MessageObject = {
+            'cmd': 'chat',
+            'token': token,
+            'senderId': "1",
+            'receiverId': 'milan',
+            'content': message,
+            'type': 'TEXT',
+            'roomId': '0209200-393089-94398219'
+        };
+        console.log(token);
+        if (token != null){
+            socket.send(JSON.stringify(MessageObject));
+        }
+        logMessage('SEND', message);
+        document.getElementById('messageInput').value = '';
+    }
+
+    function  sendHttpMessage(){
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+            alert('WebSocket未连接');
+            return;
+        }
+        const MessageObject = {
+            'cmd': 'http',
+            'token': "qq",
+            "path": "/user/info",
+            "param": {
+                "uid": "1001"
+            },
+        };
+        console.log(token);
+        if (token != null){
+            socket.send(JSON.stringify(MessageObject));
+        }
+        logMessage('SEND', JSON.stringify(MessageObject));
+        document.getElementById('messageInput').value = '';
+    }
+
+
+    function sendFiles() {
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+            alert('WebSocket未连接');
+            return;
+        }
+        const room = {
+            'roomId': 13,
+            'assessmentId': 'testguan4',
+            'roomType': 'SINGLE'
+        }
+        const MessageObject = {
+            'senderId': 'HY000001',
+            'receiverId': 'c6871efe-182',
+            'type': 'FILE',
+            'attachment': [
+                {"url": "/file1.pdf", "name": "file1.pdf", "type": "application/pdf", "size": 21000},
+                {"url": "/file2.pdf", "name": "file2.pdf", "type": "application/pdf", "size": 19000}
+            ],
+            'room': room
+        };
+        socket.send(JSON.stringify(MessageObject));
+        logMessage('SEND', "sendFiles Success");
+    }
+
+    function sendMetadata() {
+
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+            alert('WebSocket未连接');
+            return;
+        }
+        const message = document.getElementById('messageInput').value;
+        if (!message) {
+            alert('请输入要发送的消息');
+            return;
+        }
+        const room = {
+            'roomId': 13,
+            'assessmentId': 'testguan4',
+            'roomType': 'SINGLE'
+        }
+        const MessageObject = {
+            'senderId': 'HY000001',
+            'receiverId': 'c6871efe-182',
+            'content': message,
+            'type': 'TEXT',
+            'metadata': {
+                "version": "0.0.1", "name": "saikoune-chat"
+            },
+            'room': room
+        };
+        socket.send(JSON.stringify(MessageObject));
+        logMessage('SEND', "sendMetadata Success");
+        document.getElementById('messageInput').value = '';
+    }
+</script>
+
+</body>
+</html>
