@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.anoxia.chat.mapper.ChatMessageMapper">
+
+    <resultMap id="chatMessage" type="cn.anoxia.chat.common.domain.ChatMessage">
+        <result column="message_id" property="messageId"/>
+        <result column="sender_id" property="senderId"/>
+        <result column="receiver_id" property="receiverId"/>
+        <result column="content" property="content"/>
+        <result column="timestamp" property="timestamp"/>
+        <result column="status" property="status"/>
+        <result column="type" property="type"/>
+        <result column="ipAddress" property="ipAddress"/>
+        <!--        <result column="metadata" property="metadata" typeHandler="com.api.chat.entity.handler.MapObjectJsonTypeHandler"/>-->
+        <association property="room" javaType="cn.anoxia.chat.common.domain.ChatRoom">
+            <id column="room_id" property="roomId"/>
+            <result column="assessment_id" property="assessmentId"/>
+            <result column="room_name" property="roomName"/>
+            <result column="room_icon" property="roomIcon"/>
+            <result column="room_status" property="roomStatus"/>
+            <result column="room_type" property="roomType"/>
+            <result column="description" property="description"/>
+            <result column="created_time" property="createdTime"/>
+        </association>
+    </resultMap>
+
+    <!-- 批量插入 -->
+    <insert id="batchInsertMessages">
+        INSERT INTO chat_message (
+        message_id, room_id, sender_id, receiver_id, content, status, type, ipAddress, timestamp , metadata
+        ) VALUES
+        <foreach collection="messages" item="msg" separator=",">
+            (
+            #{msg.messageId},
+            #{msg.room.roomId},
+            #{msg.senderId},
+            #{msg.receiverId},
+            #{msg.content},
+            #{msg.status},
+            #{msg.type},
+            #{msg.ipAddress},
+            #{msg.timestamp},
+            #{msg.metadata, typeHandler=com.api.chat.entity.handler.MapObjectJsonTypeHandler}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 查询历史记录 -->
+    <select id="selectMessageByHistory" resultMap="chatMessage">
+        SELECT
+        cm.message_id,
+        cm.sender_id,
+        cm.receiver_id,
+        cm.content,
+        cm.status,
+        cm.type,
+        cm.ipAddress,
+        cm.timestamp,
+        cm.metadata,
+        cr.room_id,
+        cr.assessment_id,
+        cr.room_name,
+        cr.room_icon,
+        cr.room_status,
+        cr.room_type,
+        cr.created_time,
+        cr.description
+        FROM chat_message cm
+        LEFT JOIN chat_room cr ON cm.room_id = cr.room_id
+        WHERE cm.room_id = #{roomId}
+        ORDER BY cm.timestamp DESC
+        LIMIT #{start}, #{end}
+    </select>
+
+    <!-- 查询最后一条消息记录 -->
+    <select id="selectLastMessagesByRoomIds" resultMap="chatMessage">
+        SELECT
+        *
+        FROM
+        chat_message cm
+        INNER JOIN chat_room rm ON cm.room_id = rm.room_id
+        WHERE
+        cm.room_id IN
+        <foreach item="roomId" collection="roomIds" open="(" separator="," close=")">
+            #{roomId}
+        </foreach>
+        AND cm.TIMESTAMP = (
+        SELECT
+        MAX( TIMESTAMP )
+        FROM
+        chat_message
+        WHERE
+        room_id = cm.room_id
+        )
+    </select>
+
+    <update id="batchUpdateMessageStatus" parameterType="java.util.Map">
+        UPDATE chat_message
+        SET status = #{newStatus}
+        WHERE message_id IN
+        <foreach collection="messageIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+
+</mapper>

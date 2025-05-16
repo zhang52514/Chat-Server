@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.anoxia.chat.mapper.ChatRoomMapper">
+
+    <resultMap id="ChatRoomResultMap" type="cn.anoxia.chat.common.domain.ChatRoom">
+        <id column="room_id" property="roomId"/>
+        <result column="assessment_id" property="assessmentId"/>
+        <result column="room_name" property="roomName"/>
+        <result column="room_icon" property="roomIcon"/>
+        <result column="room_status" property="roomStatus"/>
+        <result column="room_type" property="roomType"/>
+        <result column="description" property="description"/>
+        <result column="created_time" property="createdTime"/>
+    </resultMap>
+
+    <insert id="insertRoom" parameterType="cn.anoxia.chat.common.domain.ChatRoom" useGeneratedKeys="true" keyProperty="roomId">
+        INSERT INTO chat_room
+        (assessment_id, room_name, room_icon, room_status, room_type, description, created_time)
+        VALUES
+        (#{assessmentId}, #{roomName}, #{roomIcon}, #{roomStatus}, #{roomType}, #{description}, NOW())
+    </insert>
+
+    <select id="selectById" resultMap="ChatRoomResultMap">
+        SELECT * FROM chat_room WHERE room_id = #{roomId}
+    </select>
+
+</mapper>

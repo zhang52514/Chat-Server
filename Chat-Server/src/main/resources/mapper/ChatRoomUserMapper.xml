@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.anoxia.chat.mapper.ChatRoomUserMapper">
+
+    <resultMap id="ChatRoomUserResultMap" type="cn.anoxia.chat.common.domain.ChatRoomUser">
+        <id column="id" property="id" />
+        <result column="room_id" property="roomId" />
+        <result column="user_id" property="userId" />
+        <result column="join_time" property="joinTime" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <insert id="insert" parameterType="cn.anoxia.chat.common.domain.ChatRoomUser" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO chat_room_user (room_id, user_id, join_time, create_time, update_time)
+        VALUES (#{roomId}, #{userId}, #{joinTime}, NOW(), NOW())
+    </insert>
+    <!-- 查询私聊房间ID -->
+    <select id="getPrivateRoomId" resultType="long">
+        SELECT cru1.room_id
+        FROM chat_room_user cru1
+        JOIN chat_room_user cru2
+        ON cru1.room_id = cru2.room_id
+        AND cru1.user_id != cru2.user_id
+        JOIN chat_room rm
+        ON rm.room_id = cru1.room_id
+        WHERE cru1.user_id = #{userId1}
+        AND cru2.user_id = #{userId2}
+        AND rm.assessment_id = #{assessment}
+        LIMIT 1;
+    </select>
+    <!-- 查询用户加入的聊天室 -->
+    <select id="selectUserRoom" resultMap="ChatRoomUserResultMap">
+        SELECT * FROM chat_room_user WHERE user_id = #{uid}
+    </select>
+</mapper>

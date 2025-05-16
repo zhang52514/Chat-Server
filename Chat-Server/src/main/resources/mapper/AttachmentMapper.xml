@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.anoxia.chat.mapper.AttachmentMapper">
+
+    <resultMap id="AttachmentResultMap" type="cn.anoxia.chat.common.domain.Attachment">
+        <id column="id" property="id"/>
+        <result column="message_id" property="messageId"/>
+        <result column="url" property="url"/>
+        <result column="name" property="name"/>
+        <result column="type" property="type"/>
+        <result column="size" property="size"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <resultMap id="AttachmentDetailResultMap" type="cn.anoxia.chat.common.domain.AttachmentDetail">
+        <id column="id" property="id"/>
+        <result column="message_id" property="messageId"/>
+        <result column="room_id" property="roomId"/>
+        <result column="sender_id" property="senderId"/>
+        <result column="receiver_id" property="receiverId"/>
+        <result column="status" property="status"/>
+        <result column="timestamp" property="timestamp"/>
+        <result column="url" property="url"/>
+        <result column="name" property="name"/>
+        <result column="type" property="type"/>
+        <result column="size" property="size"/>
+    </resultMap>
+
+    <insert id="batchInsertMessages" parameterType="java.util.List">
+        INSERT INTO chat_attachments (
+        id,message_id, url, name, type, size, created_at, updated_at
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.id},
+            #{item.messageId},
+            #{item.url},
+            #{item.name},
+            #{item.type},
+            #{item.size},
+            #{item.createdAt},
+            #{item.updatedAt}
+            )
+        </foreach>
+    </insert>
+
+
+    <select id="selectByMessageIds" resultMap="AttachmentResultMap">
+        SELECT * FROM chat_attachments
+        WHERE message_id IN
+        <foreach collection="messageIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ORDER BY created_at ASC
+    </select>
+    <select id="selectAttachmentDetailByMessageId" resultMap="AttachmentDetailResultMap">
+        SELECT
+        cm.message_id,
+        cm.room_id,
+        cm.sender_id,
+        cm.receiver_id,
+        cm.`status`,
+        cm.`timestamp`,
+        ca.id,
+        ca.url,
+        ca.`name`,
+        ca.type,
+        ca.size
+        FROM
+        chat_message cm
+        JOIN chat_attachments ca ON cm.message_id = ca.message_id
+        WHERE
+        ca.id = #{id}
+    </select>
+</mapper>
