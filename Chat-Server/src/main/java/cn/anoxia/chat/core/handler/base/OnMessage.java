@@ -56,6 +56,7 @@ public abstract class OnMessage {
             msg.setMessageId(messageId);
             msg.setStatus(MessageStatus.SENT);
             msg.setTimestamp(new Date());
+
             //判断用户是否离线
             List<ChannelHandlerContext> ctx_r = ChannelManager.get(receiverId);
 
@@ -69,6 +70,7 @@ public abstract class OnMessage {
             if (ctx_s != null && !ctx_s.isEmpty()) {
                 sendToClients(ctx_s, msg);  // 推送消息到自己的客户端
             }
+
             //消息缓存
             cacheMessageToRedis(msg);
             // 处理 msg

@@ -51,6 +51,7 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<RequestDt
             this.authHandler.execute(ctx, authMsg, dataHandlerService);
             return;
         }
+
         //聊天消息
         if (msg instanceof ChatMessage chatMsg) {
             this.singleChatHandler.execute(ctx, chatMsg, this.dataHandlerService);

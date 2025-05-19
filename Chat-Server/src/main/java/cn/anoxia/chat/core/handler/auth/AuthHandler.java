@@ -44,13 +44,11 @@ public class AuthHandler extends OnMessage {
             User user = dataHandlerService.loginUser(authMsg.getUserName(), authMsg.getUserPwd(), ip);
 
             if (user == null) {
-                ctx.writeAndFlush(ResponseDto.failure(ErrorCode.SERVER_ERROR, "服务器内部错误"));
                 sendFailure(ctx, ErrorCode.AUTH_FAILED, "用户名或者密码错误");
                 return;
             }
 
             if (user.getStatus() == 0) {
-                ctx.writeAndFlush(ResponseDto.failure(ErrorCode.SERVER_ERROR, "服务器内部错误"));
                 sendFailure(ctx, ErrorCode.AUTH_FAILED, "账户被禁用");
                 return;
             }

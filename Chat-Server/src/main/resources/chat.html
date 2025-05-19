@@ -8,13 +8,21 @@
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
 
 <div class="bg-white rounded-2xl shadow-xl p-8 max-w-3xl w-full">
-    <h1 class="text-3xl font-bold mb-6 text-center text-blue-600">WebSocket 测试页面</h1>
-
     <div class="space-y-4">
         <div>
-            <label class="block mb-1 text-gray-700 font-semibold">服务器地址</label>
+            <label class="block mb-1 text-gray-700 font-semibold" for="wsUrl">服务器地址</label>
             <input id="wsUrl" type="text" value="ws://127.0.0.1:8081/chat" placeholder="例如 ws://localhost:8080/ws"
                    class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"/>
+            <label class="block mb-1 text-gray-700 font-semibold" for="userName">用户名</label>
+            <input id="userName" type="text" value="admin" placeholder="user name"
+                   class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"/>
+            <label class="block mb-1 text-gray-700 font-semibold" for="userPwd">密码</label>
+            <input id="userPwd" type="password" value="123133131" placeholder="user password"
+                   class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"/>
+            <input id="sendId" type="text" value="1" placeholder="ID"
+                   class="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"/>
+            <input id="RefId" type="text" value="2" placeholder="ID"
+                   class="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"/>
         </div>
 
         <div class="flex space-x-4">
@@ -27,25 +35,25 @@
         </div>
 
         <div>
-            <label class="block mb-1 text-gray-700 font-semibold">发送消息</label>
+            <label class="block mb-1 text-gray-700 font-semibold" for="messageInput">发送消息</label>
             <input id="messageInput" type="text" placeholder="输入要发送的消息"
                    class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"/>
         </div>
 
         <button onclick="sendMessage()"
-                class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl">发送消息
+                class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl">发送消息
         </button>
         <button onclick="sendHttpMessage()"
-                class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl">发送消息
+                class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl">Http消息
         </button>
         <button onclick="ReadMessage()"
-                class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl">已读回执
+                class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl">已读回执
         </button>
         <button onclick="sendFiles()"
-                class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl">模拟发送文件
+                class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl">模拟发送文件
         </button>
         <button onclick="sendMetadata()"
-                class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl">发送Metadata
+                class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl">发送Metadata
         </button>
 
         <div class="mt-6">
@@ -58,10 +66,25 @@
     </div>
 
 </div>
+<div class="bg-white rounded-2xl shadow-xl p-8 max-w-3xl w-full">
+    <div class="space-y-4">
+        <div>
+            <label class="block mb-1 text-gray-700 font-semibold" for="token">Token</label>
+            <input id="token" type="text" placeholder="auth Token"
+                   class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"/>
+        </div>
+        <div class="mt-6">
+            <h2 class="text-2xl font-bold mb-2 text-gray-700">回复记录</h2>
+            <div id="r_messages"
+                 class="bg-gray-50 h-64 overflow-y-auto p-4 rounded-lg border space-y-2 text-sm font-mono">
+            </div>
+        </div>
+    </div>
+
+</div>
 
 <script>
     let socket;
-    let token;
 
     function logMessage(type, message) {
         const messages = document.getElementById('messages');
@@ -81,23 +104,31 @@
         socket = new WebSocket(url);
 
         socket.onopen = function () {
+            let name = document.getElementById('userName').value;
+            let pwd = document.getElementById('userPwd').value;
             const connectMessageObject = {
                 'cmd': 'auth',
-                'userName': 'admin',
-                'userPwd': '123133131'
+                'userName': name,
+                'userPwd': pwd
             };
             socket.send(JSON.stringify(connectMessageObject));
-            logMessage('SYSTEM', '连接成功');
+            logMessage('SYSTEM', '认证中...');
         };
 
         socket.onmessage = function (event) {
             console.log('Received message:', event.data);
             let message = JSON.parse(event.data);
-            if (token == null && message.data.cmd === 'auth') {
-                token = message.data.key;
+            if (message.data.cmd === 'auth') {
+                document.getElementById('token').value = message.data.key;
             }
 
-            logMessage('RECEIVE', event.data);
+
+            const messages = document.getElementById('r_messages');
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.innerHTML = `<span class="font-bold text-green-500">[${time}] ['RECEIVE']</span> ${JSON.stringify(message)}`;
+            messages.appendChild(entry);
+            messages.scrollTop = messages.scrollHeight;
         };
 
         socket.onerror = function (error) {
@@ -146,38 +177,40 @@
             alert('WebSocket未连接');
             return;
         }
+        let token = document.getElementById('token').value;
+        let sendId = document.getElementById('sendId').value;
+        let RefId = document.getElementById('RefId').value;
         const MessageObject = {
             'cmd': 'chat',
             'token': token,
-            'senderId': "1",
-            'receiverId': 'milan',
+            'senderId': sendId,
+            'receiverId': RefId,
             'content': message,
             'type': 'TEXT',
             'roomId': '0209200-393089-94398219'
         };
-        console.log(token);
-        if (token != null){
+        if (token != null) {
             socket.send(JSON.stringify(MessageObject));
         }
         logMessage('SEND', message);
         document.getElementById('messageInput').value = '';
     }
 
-    function  sendHttpMessage(){
+    function sendHttpMessage() {
         if (!socket || socket.readyState !== WebSocket.OPEN) {
             alert('WebSocket未连接');
             return;
         }
+        let token = document.getElementById('token').value;
         const MessageObject = {
             'cmd': 'http',
-            'token': "qq",
+            'token': token,
             "path": "/user/info",
             "param": {
                 "uid": "1001"
             },
         };
-        console.log(token);
-        if (token != null){
+        if (token != null) {
             socket.send(JSON.stringify(MessageObject));
         }
         logMessage('SEND', JSON.stringify(MessageObject));
