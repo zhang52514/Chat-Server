@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="cn.anoxia.chat.mapper.UserMapper">
+<mapper namespace="cn.anoxia.chat.mapper.ChatUserMapper">
 
-    <resultMap id="userResultMap" type="cn.anoxia.chat.common.domain.User">
+    <resultMap id="userResultMap" type="cn.anoxia.chat.common.domain.ChatUser">
         <id     property="id" column="id"/>
         <result property="username" column="username"/>
         <result property="nickname" column="nickname"/>
@@ -12,41 +12,40 @@
         <result property="email" column="email"/>
         <result property="phone" column="phone"/>
         <result property="status" column="status"/>
-        <result property="role" column="role"/>
         <result property="lastLoginIp" column="last_login_ip"/>
         <result property="lastLoginTime" column="last_login_time"/>
-        <result property="createTime" column="create_time"/>
-        <result property="updateTime" column="update_time"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <select id="selectById" resultMap="userResultMap">
-        SELECT * FROM user WHERE id = #{id}
+        SELECT * FROM chat_user WHERE id = #{id}
     </select>
 
     <select id="selectByUsername" resultMap="userResultMap">
-        SELECT * FROM user WHERE username = #{username}
+        SELECT * FROM chat_user WHERE username = #{username}
     </select>
 
     <select id="selectByUsernameAndPassword" resultMap="userResultMap">
-        SELECT * FROM user WHERE username = #{username} and password=#{password}
+        SELECT * FROM chat_user WHERE username = #{username} and password=#{password}
     </select>
 
     <select id="selectAll" resultMap="userResultMap">
-        SELECT * FROM user ORDER BY id DESC
+        SELECT * FROM chat_user ORDER BY id DESC
     </select>
 
-    <insert id="insert" parameterType="cn.anoxia.chat.common.domain.User" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO user (
-        username, nickname, password, avatar_url, email, phone, status, role,
-        last_login_ip, last_login_time, create_time, update_time
+    <insert id="insert" parameterType="cn.anoxia.chat.common.domain.ChatUser">
+        INSERT INTO chat_user (
+        id, username, nickname, password, avatar_url, email, phone, status,
+        last_login_ip, last_login_time, created_at, updated_at
         ) VALUES (
-        #{username}, #{nickname}, #{password}, #{avatarUrl}, #{email}, #{phone},
-        #{status}, #{role}, #{lastLoginIp}, #{lastLoginTime}, NOW(), NOW()
+       #{id}, #{username}, #{nickname}, #{password}, #{avatarUrl}, #{email}, #{phone},
+        #{status}, #{lastLoginIp}, #{lastLoginTime}, NOW(), NOW()
         )
     </insert>
 
-    <update id="update" parameterType="cn.anoxia.chat.common.domain.User">
-        UPDATE user
+    <update id="update" parameterType="cn.anoxia.chat.common.domain.ChatUser">
+        UPDATE chat_user
         SET
         nickname = #{nickname},
         password = #{password},
@@ -54,15 +53,14 @@
         email = #{email},
         phone = #{phone},
         status = #{status},
-        role = #{role},
         last_login_ip = #{lastLoginIp},
         last_login_time = #{lastLoginTime},
-        update_time = NOW()
+        updated_at = NOW()
         WHERE id = #{id}
     </update>
 
     <delete id="deleteById">
-        DELETE FROM user WHERE id = #{id}
+        DELETE FROM chat_user WHERE id = #{id}
     </delete>
 
 </mapper>

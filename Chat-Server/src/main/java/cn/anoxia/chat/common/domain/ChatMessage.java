@@ -24,7 +24,7 @@ public class ChatMessage  extends RequestDto implements AuthRequired {
     private MessageStatus status;   // 消息状态
     private MessageType type;   // 消息类型
     private List<Attachment> attachment;   //附件地址
-    private String roomId;;  //聊天房间
+    private String roomId;  //聊天房间
     private List<String> read;  // 存储已读消息的接收者ID列表
     private Map<String, Object> metadata; //附加信息
 

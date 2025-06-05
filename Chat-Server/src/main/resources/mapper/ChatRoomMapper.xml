@@ -7,13 +7,15 @@
 
     <resultMap id="ChatRoomResultMap" type="cn.anoxia.chat.common.domain.ChatRoom">
         <id column="room_id" property="roomId"/>
-        <result column="assessment_id" property="assessmentId"/>
         <result column="room_name" property="roomName"/>
-        <result column="room_icon" property="roomIcon"/>
+        <result column="room_avatar" property="roomAvatar"/>
+        <result column="room_description" property="roomDescription"/>
+        <result column="room_lastMessage" property="roomLastMessage"/>
+        <result column="room_lastMessageTime" property="roomLastMessageTime"/>
         <result column="room_status" property="roomStatus"/>
         <result column="room_type" property="roomType"/>
-        <result column="description" property="description"/>
-        <result column="created_time" property="createdTime"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
     </resultMap>
 
     <insert id="insertRoom" parameterType="cn.anoxia.chat.common.domain.ChatRoom" useGeneratedKeys="true" keyProperty="roomId">
@@ -25,6 +27,9 @@
 
     <select id="selectById" resultMap="ChatRoomResultMap">
         SELECT * FROM chat_room WHERE room_id = #{roomId}
+    </select>
+    <select id="selectInId" resultMap="ChatRoomResultMap">
+        SELECT * FROM chat_room WHERE room_id in (#{roomId})
     </select>
 
 </mapper>

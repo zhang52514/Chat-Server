@@ -1,13 +1,13 @@
 package cn.anoxia.chat.mapper;
 
 
-import cn.anoxia.chat.common.domain.ChatRoomUser;
+import cn.anoxia.chat.common.domain.ChatRoomMember;
 
 import java.util.List;
 
-public interface ChatRoomUserMapper {
+public interface ChatRoomMemberMapper {
 
-    int insert(ChatRoomUser chatRoomUser);
+    int insert(ChatRoomMember chatRoomUser);
 
     /**
      * 获取两个用户的私聊房间ID
@@ -24,5 +24,5 @@ public interface ChatRoomUserMapper {
      * @param uid 用户ID
      * @return
      */
-    List<ChatRoomUser> selectUserRoom(String uid);
+    List<ChatRoomMember> selectUserRoom(String uid);
 }

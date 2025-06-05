@@ -5,7 +5,8 @@ package cn.anoxia.chat.services;
 import cn.anoxia.chat.common.domain.AttachmentDetail;
 import cn.anoxia.chat.common.domain.ChatMessage;
 import cn.anoxia.chat.common.domain.ChatRoom;
-import cn.anoxia.chat.common.domain.User;
+import cn.anoxia.chat.common.domain.ChatUser;
+import cn.anoxia.chat.common.domain.ChatUser;
 import cn.anoxia.chat.common.enmu.MessageStatus;
 
 import java.util.List;
@@ -15,7 +16,7 @@ public interface IDataHandlerService {
 
 
 
-    User loginUser(String name,String pwd,String ip);
+    ChatUser loginUser(String name, String pwd, String ip);
 
 
     /**
@@ -73,5 +74,8 @@ public interface IDataHandlerService {
      * @return 附件详细
      */
     AttachmentDetail getAttachmentDetail(String id);
+
+
+    List<ChatRoom> getRooms(String id);
 
 }

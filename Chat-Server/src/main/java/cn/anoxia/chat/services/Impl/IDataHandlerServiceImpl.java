@@ -2,7 +2,6 @@ package cn.anoxia.chat.services.Impl;
 
 
 import cn.anoxia.chat.common.domain.*;
-import cn.anoxia.chat.common.enmu.ChatRoomType;
 import cn.anoxia.chat.common.enmu.MessageStatus;
 import cn.anoxia.chat.common.enmu.MessageType;
 import cn.anoxia.chat.core.server.RedisServer;
@@ -15,7 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class IDataHandlerServiceImpl implements IDataHandlerService {
@@ -29,17 +30,17 @@ public class IDataHandlerServiceImpl implements IDataHandlerService {
     @Autowired
     private ChatMessageMapper chatMessageMapper;
     @Autowired
-    private ChatRoomUserMapper chatRoomUserMapper;
+    private ChatRoomMemberMapper chatRoomUserMapper;
     @Autowired
     private AttachmentMapper attachmentMapper;
     @Autowired
-    private UserMapper userMapper;
+    private ChatUserMapper userMapper;
 
     @Override
-    public User loginUser(String name, String pwd,String ip) {
-        User user = userMapper.selectByUsernameAndPassword(name, pwd);
+    public ChatUser loginUser(String name, String pwd,String ip) {
+        ChatUser user = userMapper.selectByUsernameAndPassword(name, pwd);
         if (user != null) {
-            user.setLastLoginTime(new Date());
+            user.setLastLoginTime(LocalDateTime.now());
             user.setLastLoginIp(ip);
             userMapper.update(user);
         }
@@ -49,34 +50,33 @@ public class IDataHandlerServiceImpl implements IDataHandlerService {
     @Override
     @Transactional
     public ChatRoom getSingleChatRoom(String userId, String userId2, String assessmentId) {
-        Long privateRoomId = chatRoomUserMapper.getPrivateRoomId(userId, userId2, assessmentId);
-        if (privateRoomId == null) {
-            ChatRoom room = new ChatRoom();
-            room.setAssessmentId(assessmentId);
-            room.setRoomType(ChatRoomType.SINGLE);
-            room.setCreatedTime(new Date());
-            room.setRoomStatus("0");
-            room.setDescription(userId + "Created ChatRoom Success");
-            int rows = chatRoomMapper.insertRoom(room);
-            if (rows > 0) {
-                ChatRoomUser roomUser = new ChatRoomUser();
-                roomUser.setRoomId(room.getRoomId());
-                roomUser.setUserId(userId);
-                roomUser.setJoinTime(new Date());
-                ChatRoomUser roomUser2 = new ChatRoomUser();
-                roomUser2.setRoomId(room.getRoomId());
-                roomUser2.setUserId(userId2);
-                roomUser2.setJoinTime(new Date());
-                int insert = chatRoomUserMapper.insert(roomUser);
-                int insert1 = chatRoomUserMapper.insert(roomUser2);
-                if (insert > 0 && insert1 > 0) {
-                    return room;
-                }
-                return null;
-            }
-            return null;
-        }
-        return chatRoomMapper.selectById(privateRoomId);
+//        Long privateRoomId = chatRoomUserMapper.getPrivateRoomId(userId, userId2, assessmentId);
+//        if (privateRoomId == null) {
+//            ChatRoom room = new ChatRoom();
+//            room.setRoomType(ChatRoomType.single);
+//            room.setCreatedTime(new Date());
+//            room.setRoomStatus(ChatRoomStatus.normal);
+//            room.setDescription(userId + "Created ChatRoom Success");
+//            int rows = chatRoomMapper.insertRoom(room);
+//            if (rows > 0) {
+//                ChatRoomUser roomUser = new ChatRoomUser();
+//                roomUser.setRoomId(room.getRoomId());
+//                roomUser.setUserId(userId);
+//                roomUser.setJoinTime(new Date());
+//                ChatRoomUser roomUser2 = new ChatRoomUser();
+//                roomUser2.setRoomId(room.getRoomId());
+//                roomUser2.setUserId(userId2);
+//                roomUser2.setJoinTime(new Date());
+//                int insert = chatRoomUserMapper.insert(roomUser);
+//                int insert1 = chatRoomUserMapper.insert(roomUser2);
+//                if (insert > 0 && insert1 > 0) {
+//                    return room;
+//                }
+//                return null;
+//            }
+//            return null;
+//        }
+        return chatRoomMapper.selectById(12L);
     }
 
     @Override
@@ -183,14 +183,14 @@ public class IDataHandlerServiceImpl implements IDataHandlerService {
     @Override
     public List<ChatMessage> getUserLastMessage(String uid) {
 
-        //获取用户聊天室
-        List<ChatRoomUser> chatRoomUsers = chatRoomUserMapper.selectUserRoom(uid);
-        if (chatRoomUsers.isEmpty()) {
-            return Collections.emptyList();
-        }
-        List<Long> roomIds = chatRoomUsers.stream().map(ChatRoomUser::getRoomId).toList();
-        //roomId 查询缓存  缓存不存在  查询DB
-        List<ChatMessage> lastMessagesList = redisServer.getLastMessagesList(roomIds);
+//        //获取用户聊天室
+//        List<ChatRoomMember> chatRoomUsers = chatRoomUserMapper.selectUserRoom(uid);
+//        if (chatRoomUsers.isEmpty()) {
+//            return Collections.emptyList();
+//        }
+//        List<String> roomIds = chatRoomUsers.stream().map(ChatRoomMember::getRoomId).toList();
+//        //roomId 查询缓存  缓存不存在  查询DB
+//        List<ChatMessage> lastMessagesList = redisServer.getLastMessagesList(roomIds);
 
         // 获取 Redis 中没有的 roomIds（即未命中的聊天室 ID）
 //        List<Long> difference = roomIds.stream()
@@ -203,7 +203,7 @@ public class IDataHandlerServiceImpl implements IDataHandlerService {
 //            lastMessagesList.addAll(dbMessages);
 //        }
 
-        return lastMessagesList;
+        return null;
     }
 
     @Override
@@ -264,6 +264,18 @@ public class IDataHandlerServiceImpl implements IDataHandlerService {
             }
         }
         return attachmentMapper.selectAttachmentDetailByMessageId(id);
+    }
+
+    @Override
+    public List<ChatRoom> getRooms(String id) {
+        List<ChatRoomMember> chatRoomMembers = chatRoomUserMapper.selectUserRoom(id);
+        if (chatRoomMembers.isEmpty()){
+            return Collections.emptyList();
+        }
+        String roomIds = chatRoomMembers.stream()
+                .map(ChatRoomMember::getRoomId)
+                .collect(Collectors.joining(","));
+        return chatRoomMapper.selectInId(roomIds);
     }
 
     private AttachmentDetail getAttachmentDetail(String id, ChatMessage msg, Attachment att) {

@@ -6,7 +6,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum ChatRoomType {
-    SINGLE,//SINGLE   私聊
-    GROUP,//GROUP     群组
-    AI,//SYSTEM   AI
+    single, //SINGLE   私聊
+    group, //GROUP     群组
+    ai, //   AI
 }

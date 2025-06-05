@@ -1,7 +1,7 @@
 package cn.anoxia.chat.core.handler.auth;
 
 import cn.anoxia.chat.common.domain.AuthMessage;
-import cn.anoxia.chat.common.domain.User;
+import cn.anoxia.chat.common.domain.ChatUser;
 import cn.anoxia.chat.common.domain.dto.RequestDto;
 import cn.anoxia.chat.common.domain.dto.ResponseDto;
 import cn.anoxia.chat.common.utils.ErrorCode;
@@ -41,26 +41,26 @@ public class AuthHandler extends OnMessage {
             }
 
             String ip = getRemoteIp(ctx);
-            User user = dataHandlerService.loginUser(authMsg.getUserName(), authMsg.getUserPwd(), ip);
+            ChatUser user = dataHandlerService.loginUser(authMsg.getUserName(), authMsg.getUserPwd(), ip);
 
             if (user == null) {
                 sendFailure(ctx, ErrorCode.AUTH_FAILED, "用户名或者密码错误");
                 return;
             }
 
-            if (user.getStatus() == 0) {
+            if (user.getStatus().equals("0")) {
                 sendFailure(ctx, ErrorCode.AUTH_FAILED, "账户被禁用");
                 return;
             }
 
             // 绑定 session 和通道
             String sessionId = ctx.channel().id().asLongText();
-            SessionManager.add(sessionId, user.getId().toString());
-            ChannelManager.add(user.getId().toString(), ctx);
+            SessionManager.add(sessionId, user.getId());
+            ChannelManager.add(user.getId(), ctx);
 
             // 生成并绑定 token
             String token = JwtUtils.generateToken(authMsg.getUserName());
-            TokenManager.add(user.getId().toString(), token);
+            TokenManager.add(user.getId(), token);
 
             log.info("用户登录成功 => ID: {}, IP: {}", user.getId(), ip);
 
