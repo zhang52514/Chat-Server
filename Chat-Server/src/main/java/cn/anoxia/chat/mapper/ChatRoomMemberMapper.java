@@ -25,4 +25,6 @@ public interface ChatRoomMemberMapper {
      * @return
      */
     List<ChatRoomMember> selectUserRoom(String uid);
+
+    List<ChatRoomMember> selectAllMembersInRoomIds(List<String> roomIds);
 }

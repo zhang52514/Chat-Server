@@ -46,8 +46,7 @@ public class RedisServer {
      * 缓存所有正常消息（包括自己发和别人发）
      */
     public void cacheMessage(ChatMessage msg) {
-//        String normalKey = "normal:messages:" + msg.getRoom().getRoomId();
-        String normalKey = "normal:messages:";
+        String normalKey = "normal:messages:" + msg.getRoomId();
         String msgJson = JSON.toJSONString(msg);
 
         // 使用消息 ID 作为 Hash 键来存储消息
@@ -62,7 +61,7 @@ public class RedisServer {
     /**
      * 获取历史消息列表（正常缓存，不删除）
      */
-    public List<ChatMessage> getMessages(Long roomId, int start, int end) {
+    public List<ChatMessage> getMessages(String roomId, int start, int end) {
         String normalKey = "normal:messages:" + roomId;
 
         // 获取 Hash 中的所有消息 ID

@@ -44,7 +44,7 @@ public abstract class OnMessage {
 
             String messageId = redisServer.generateDailyId();
             //文件类型设置相关属性
-            if (msg.getType() == MessageType.FILE) {
+            if (msg.getType() == MessageType.file) {
                 for (Attachment item : msg.getAttachment()) {
                     item.setId(UUID.randomUUID().toString());
                     item.setMessageId(messageId);
@@ -54,14 +54,14 @@ public abstract class OnMessage {
             }
 
             msg.setMessageId(messageId);
-            msg.setStatus(MessageStatus.SENT);
+            msg.setStatus(MessageStatus.sent);
             msg.setTimestamp(new Date());
 
             //判断用户是否离线
             List<ChannelHandlerContext> ctx_r = ChannelManager.get(receiverId);
 
             if (ctx_r != null && !ctx_r.isEmpty()) {
-                msg.setStatus(MessageStatus.DELIVERED);
+                msg.setStatus(MessageStatus.delivered);
                 sendToClients(ctx_r, msg);  // 推送消息到接收者的客户端
             }
 

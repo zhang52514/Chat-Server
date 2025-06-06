@@ -10,6 +10,6 @@ public interface ChatRoomMapper {
     int insertRoom(ChatRoom chatRoom);
 
     ChatRoom selectById(Long roomId);
-    List<ChatRoom> selectInId(String roomId);
+    List<ChatRoom> selectInId(List<String> roomIds);
 
 }

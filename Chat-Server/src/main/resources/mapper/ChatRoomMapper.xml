@@ -29,7 +29,11 @@
         SELECT * FROM chat_room WHERE room_id = #{roomId}
     </select>
     <select id="selectInId" resultMap="ChatRoomResultMap">
-        SELECT * FROM chat_room WHERE room_id in (#{roomId})
+        SELECT * FROM chat_room
+        WHERE room_id IN
+        <foreach collection="roomIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
     </select>
 
 </mapper>

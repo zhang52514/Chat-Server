@@ -5,24 +5,15 @@
 
     <resultMap id="chatMessage" type="cn.anoxia.chat.common.domain.ChatMessage">
         <result column="message_id" property="messageId"/>
+        <result column="room_id" property="roomId"/>
         <result column="sender_id" property="senderId"/>
         <result column="receiver_id" property="receiverId"/>
         <result column="content" property="content"/>
-        <result column="timestamp" property="timestamp"/>
         <result column="status" property="status"/>
         <result column="type" property="type"/>
-        <result column="ipAddress" property="ipAddress"/>
-        <!--        <result column="metadata" property="metadata" typeHandler="com.api.chat.entity.handler.MapObjectJsonTypeHandler"/>-->
-        <association property="room" javaType="cn.anoxia.chat.common.domain.ChatRoom">
-            <id column="room_id" property="roomId"/>
-            <result column="assessment_id" property="assessmentId"/>
-            <result column="room_name" property="roomName"/>
-            <result column="room_icon" property="roomIcon"/>
-            <result column="room_status" property="roomStatus"/>
-            <result column="room_type" property="roomType"/>
-            <result column="description" property="description"/>
-            <result column="created_time" property="createdTime"/>
-        </association>
+        <result column="metadata" property="metadata"
+                typeHandler="cn.anoxia.chat.common.domain.Fastjson2MapTypeHandler"/>
+        <result column="timestamp" property="timestamp"/>
     </resultMap>
 
     <!-- 批量插入 -->
@@ -55,17 +46,15 @@
         cm.content,
         cm.status,
         cm.type,
-        cm.ipAddress,
         cm.timestamp,
         cm.metadata,
         cr.room_id,
-        cr.assessment_id,
         cr.room_name,
-        cr.room_icon,
+        cr.room_avatar,
         cr.room_status,
         cr.room_type,
-        cr.created_time,
-        cr.description
+        cr.created_at,
+        cr.room_description
         FROM chat_message cm
         LEFT JOIN chat_room cr ON cm.room_id = cr.room_id
         WHERE cm.room_id = #{roomId}

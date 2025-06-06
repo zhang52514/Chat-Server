@@ -14,7 +14,7 @@ import java.util.List;
 
 public class JsonMessageDecoder extends MessageToMessageDecoder<TextWebSocketFrame> {
     @Override
-    protected void decode(ChannelHandlerContext ctx, TextWebSocketFrame msg, List<Object> out) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, TextWebSocketFrame msg, List<Object> out) {
         try {
             String text = msg.text();
             InetSocketAddress socket = (InetSocketAddress) ctx.channel().remoteAddress();

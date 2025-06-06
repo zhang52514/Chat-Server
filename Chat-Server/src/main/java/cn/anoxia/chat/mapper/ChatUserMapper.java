@@ -18,4 +18,6 @@ public interface ChatUserMapper {
     int update(ChatUser user);
 
     int deleteById(Long id);
+
+    List<ChatUser> selectUser(String id);
 }

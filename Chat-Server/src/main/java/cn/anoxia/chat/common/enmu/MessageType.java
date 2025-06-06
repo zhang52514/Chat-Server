@@ -7,7 +7,12 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum MessageType {
     text,
-    FILE,
-    EMOJI,
-    QUILL;
+    file,
+    image,
+    audio,
+    video,
+    quill, // 富文本（富内容）
+    emoji,
+    system, // 系统通知
+    aiReply, // AI回复（特化处理）
 }

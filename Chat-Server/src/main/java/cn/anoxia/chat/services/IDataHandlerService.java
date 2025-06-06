@@ -30,12 +30,9 @@ public interface IDataHandlerService {
     /**
      * 获取聊天历史记录 默认是50条
      *
-     * @param roomId 房间ID
-     * @param start  开始
-     * @param end    结束
      * @return 返回message
      */
-    List<ChatMessage> getHistory(Long roomId, int start, int end);
+    Map<String, List<ChatMessage>>  getAllRoomMessagesWithDbAndAttachments(String uid,int limit);
 
     /**
      * 更新消息状态
@@ -77,5 +74,6 @@ public interface IDataHandlerService {
 
 
     List<ChatRoom> getRooms(String id);
+    List<ChatUser> getUsers(String id);
 
 }

@@ -63,4 +63,16 @@
         DELETE FROM chat_user WHERE id = #{id}
     </delete>
 
+
+    <select id="selectUser" resultMap="userResultMap">
+        SELECT DISTINCT u.*
+        FROM chat_room_member m1
+        JOIN chat_room_member m2
+        ON m1.room_id = m2.room_id
+        JOIN chat_user u
+        ON m2.user_id = u.id
+        WHERE m1.user_id = #{id};
+    </select>
+
+
 </mapper>

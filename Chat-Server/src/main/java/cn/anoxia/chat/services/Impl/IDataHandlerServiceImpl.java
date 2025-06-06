@@ -34,18 +34,9 @@ public class IDataHandlerServiceImpl implements IDataHandlerService {
     @Autowired
     private AttachmentMapper attachmentMapper;
     @Autowired
-    private ChatUserMapper userMapper;
+    private ChatUserMapper chatuserMapper;
 
-    @Override
-    public ChatUser loginUser(String name, String pwd,String ip) {
-        ChatUser user = userMapper.selectByUsernameAndPassword(name, pwd);
-        if (user != null) {
-            user.setLastLoginTime(LocalDateTime.now());
-            user.setLastLoginIp(ip);
-            userMapper.update(user);
-        }
-        return user;
-    }
+
 
     @Override
     @Transactional
@@ -79,61 +70,7 @@ public class IDataHandlerServiceImpl implements IDataHandlerService {
         return chatRoomMapper.selectById(12L);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<ChatMessage> getHistory(Long roomId, int start, int end) {
-        int count = end - start;
-        List<ChatMessage> messages = redisServer.getMessages(roomId, start, end);
-        log.info("获取room-{}历史记录大小：{}", roomId, messages.size());
-        List<ChatMessage> result = new ArrayList<>();
 
-        // 初始化消息 ID 列表
-        List<String> messageIds = new ArrayList<>();
-        if (!messages.isEmpty()) {
-            messageIds.addAll(messages.stream()
-                    .map(ChatMessage::getMessageId)
-                    .filter(Objects::nonNull)
-                    .toList());
-        }
-
-        if (messages.size() < count) {
-            int remainingCount = count - messages.size();
-            int dbStart = Math.max(0, start - remainingCount);
-
-            List<ChatMessage> dbMessages = chatMessageMapper.selectMessageByHistory(roomId, dbStart, remainingCount);
-
-            if (!dbMessages.isEmpty()) {
-                List<String> dbMessageIds = dbMessages.stream()
-                        .map(ChatMessage::getMessageId)
-                        .filter(Objects::nonNull)
-                        .toList();
-                messageIds.addAll(dbMessageIds);
-
-                // 附件只在 messageIds 非空时查询
-                if (!messageIds.isEmpty()) {
-                    List<Attachment> attachmentList = attachmentMapper.selectByMessageIds(messageIds);
-
-                    Map<String, List<Attachment>> messageAttachmentsMap = new HashMap<>();
-                    for (Attachment attachment : attachmentList) {
-                        messageAttachmentsMap
-                                .computeIfAbsent(attachment.getMessageId(), k -> new ArrayList<>())
-                                .add(attachment);
-                    }
-
-                    for (ChatMessage message : dbMessages) {
-                        message.setAttachment(messageAttachmentsMap.getOrDefault(message.getMessageId(), List.of()));
-                    }
-                }
-
-                result.addAll(dbMessages); // db 消息先放入结果
-            }
-        }
-
-        result.addAll(messages); // redis 消息补到结果后面
-        // 最终统一按时间排序
-        result.sort(Comparator.comparing(ChatMessage::getTimestamp));
-        return result;
-    }
 
 
     @Override
@@ -254,7 +191,7 @@ public class IDataHandlerServiceImpl implements IDataHandlerService {
             }
 
             for (ChatMessage msg : allMessages) {
-                if (msg.getType() == MessageType.FILE && msg.getAttachment() != null) {
+                if (msg.getType() == MessageType.file && msg.getAttachment() != null) {
                     for (Attachment att : msg.getAttachment()) {
                         if (att.getId().equals(id)) {
                             return getAttachmentDetail(id, msg, att);
@@ -266,17 +203,7 @@ public class IDataHandlerServiceImpl implements IDataHandlerService {
         return attachmentMapper.selectAttachmentDetailByMessageId(id);
     }
 
-    @Override
-    public List<ChatRoom> getRooms(String id) {
-        List<ChatRoomMember> chatRoomMembers = chatRoomUserMapper.selectUserRoom(id);
-        if (chatRoomMembers.isEmpty()){
-            return Collections.emptyList();
-        }
-        String roomIds = chatRoomMembers.stream()
-                .map(ChatRoomMember::getRoomId)
-                .collect(Collectors.joining(","));
-        return chatRoomMapper.selectInId(roomIds);
-    }
+
 
     private AttachmentDetail getAttachmentDetail(String id, ChatMessage msg, Attachment att) {
         AttachmentDetail attDetail = new AttachmentDetail();
@@ -319,4 +246,144 @@ public class IDataHandlerServiceImpl implements IDataHandlerService {
         }
         return attachments;
     }
+
+
+
+//    ------------------------- =========================== V2
+@Override
+public ChatUser loginUser(String name, String pwd, String ip) {
+    ChatUser user = chatuserMapper.selectByUsernameAndPassword(name, pwd);
+    if (user != null) {
+        user.setLastLoginTime(LocalDateTime.now());
+        user.setLastLoginIp(ip);
+        chatuserMapper.update(user);
+    }
+    return user;
+}
+@Override
+public List<ChatRoom> getRooms(String id) {
+    // Step 1: 获取该用户参与的房间
+    List<ChatRoomMember> joinedRooms = chatRoomUserMapper.selectUserRoom(id);
+    if (joinedRooms.isEmpty()) {
+        return Collections.emptyList();
+    }
+    List<String> roomIds = joinedRooms.stream()
+            .map(ChatRoomMember::getRoomId)
+            .distinct()
+            .collect(Collectors.toList());
+
+    // Step 2: 查询这些房间的基本信息
+    List<ChatRoom> chatRooms = chatRoomMapper.selectInId(roomIds);
+    // Step 3: 查询这些房间下的所有成员
+    List<ChatRoomMember> allMembers = chatRoomUserMapper.selectAllMembersInRoomIds(roomIds);
+
+    // Step 4: 根据 roomId 组织成员数据
+    Map<String, List<ChatRoomMember>> roomIdToMembers = allMembers.stream()
+            .collect(Collectors.groupingBy(ChatRoomMember::getRoomId));
+
+    for (ChatRoom room : chatRooms) {
+        List<ChatRoomMember> members = roomIdToMembers.get(room.getRoomId());
+
+        if (members != null) {
+            room.setMemberIds(
+                    members.stream()
+                            .map(ChatRoomMember::getUserId)
+                            .collect(Collectors.toList())
+            );
+
+            room.setMemberRoles(
+                    members.stream().collect(Collectors.toMap(
+                            ChatRoomMember::getUserId,
+                            ChatRoomMember::getRole
+                    ))
+            );
+        }
+    }
+
+    return chatRooms;
+}
+
+    @Override
+    public List<ChatUser> getUsers(String id) {
+        return chatuserMapper.selectUser(id);
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, List<ChatMessage>> getAllRoomMessagesWithDbAndAttachments(String uid, int limitPerRoom) {
+        Map<String, List<ChatMessage>> result = new HashMap<>();
+
+        // Step 1. 获取用户加入的所有房间
+        List<ChatRoomMember> joinedRooms = chatRoomUserMapper.selectUserRoom(uid);
+        if (joinedRooms == null || joinedRooms.isEmpty()) return result;
+
+        for (ChatRoomMember room : joinedRooms) {
+            String roomId = room.getRoomId();
+            String redisKey = "normal:messages:" + roomId;
+
+            List<ChatMessage> redisMessages = new ArrayList<>();
+            List<Object> rawMessages = redisServer.getRedisTemplate().opsForHash().values(redisKey);
+
+            // Step 2. Redis 消息存在则解析
+            if (rawMessages != null && !rawMessages.isEmpty()) {
+                redisMessages = rawMessages.stream()
+                        .map(o -> JSON.parseObject((String) o, ChatMessage.class))
+                        .filter(msg -> msg.getMessageId() != null)
+                        .sorted(Comparator.comparing(ChatMessage::getTimestamp))
+                        .toList();
+            }
+
+            int redisCount = redisMessages.size();
+            int countNeeded = limitPerRoom - redisCount;
+
+            // Step 3. 补充 DB 消息（倒序查最新的）
+            List<ChatMessage> dbMessages = new ArrayList<>();
+            if (countNeeded > 0) {
+                dbMessages = chatMessageMapper.selectMessageByHistory(roomId, 0, countNeeded);
+            }
+
+            // Step 4. 合并并去重（以 messageId 为唯一键）
+            Map<String, ChatMessage> mergedMap = new HashMap<>();
+            for (ChatMessage msg : redisMessages) {
+                mergedMap.put(msg.getMessageId(), msg);
+            }
+            for (ChatMessage msg : dbMessages) {
+                mergedMap.putIfAbsent(msg.getMessageId(), msg); // 避免重复覆盖
+            }
+
+            List<ChatMessage> mergedMessages = new ArrayList<>(mergedMap.values());
+
+            // Step 5. 查询附件并注入
+            List<String> messageIds = mergedMessages.stream()
+                    .map(ChatMessage::getMessageId)
+                    .filter(Objects::nonNull)
+                    .toList();
+
+            if (!messageIds.isEmpty()) {
+                List<Attachment> attachments = attachmentMapper.selectByMessageIds(messageIds);
+                Map<String, List<Attachment>> attachmentMap = new HashMap<>();
+                for (Attachment att : attachments) {
+                    attachmentMap
+                            .computeIfAbsent(att.getMessageId(), k -> new ArrayList<>())
+                            .add(att);
+                }
+                for (ChatMessage msg : mergedMessages) {
+                    msg.setAttachment(attachmentMap.getOrDefault(msg.getMessageId(), List.of()));
+                }
+            }
+
+            // Step 6. 排序并截取最新 N 条
+            mergedMessages.sort(Comparator.comparing(ChatMessage::getTimestamp));
+            if (mergedMessages.size() > limitPerRoom) {
+                mergedMessages = mergedMessages.subList(mergedMessages.size() - limitPerRoom, mergedMessages.size());
+            }
+
+            result.put(roomId, mergedMessages);
+        }
+
+        return result;
+    }
+
+
 }
