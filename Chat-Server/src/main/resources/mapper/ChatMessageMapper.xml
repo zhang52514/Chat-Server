@@ -57,7 +57,10 @@
         cr.room_description
         FROM chat_message cm
         LEFT JOIN chat_room cr ON cm.room_id = cr.room_id
-        WHERE cm.room_id = #{roomId}
+        WHERE cm.room_id IN
+        <foreach collection="roomIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
         ORDER BY cm.timestamp DESC
         LIMIT #{start}, #{end}
     </select>

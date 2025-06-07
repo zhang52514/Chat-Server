@@ -23,7 +23,7 @@ public interface ChatMessageMapper {
      * @param end    结束索引
      * @return 聊天消息列表
      */
-    List<ChatMessage> selectMessageByHistory(String roomId, int start, int end);
+    List<ChatMessage> selectMessageByHistory(List<String> roomIds, int start, int end);
 
     /**
      * 批量更新消息状态

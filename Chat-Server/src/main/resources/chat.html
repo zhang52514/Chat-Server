@@ -14,14 +14,14 @@
             <input id="wsUrl" type="text" value="ws://127.0.0.1:8081/chat" placeholder="例如 ws://localhost:8080/ws"
                    class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"/>
             <label class="block mb-1 text-gray-700 font-semibold" for="userName">用户名</label>
-            <input id="userName" type="text" value="admin" placeholder="user name"
+            <input id="userName" type="text" value="Anoxia2" placeholder="user name"
                    class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"/>
             <label class="block mb-1 text-gray-700 font-semibold" for="userPwd">密码</label>
-            <input id="userPwd" type="password" value="123133131" placeholder="user password"
+            <input id="userPwd" type="password" value="123456" placeholder="user password"
                    class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"/>
-            <input id="sendId" type="text" value="1" placeholder="ID"
+            <input id="sendId" type="text" value="u900" placeholder="ID"
                    class="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"/>
-            <input id="RefId" type="text" value="2" placeholder="ID"
+            <input id="RefId" type="text" value="u800" placeholder="ID"
                    class="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"/>
         </div>
 
@@ -187,7 +187,7 @@
             'receiverId': RefId,
             'content': message,
             'type': 'TEXT',
-            'roomId': '0209200-393089-94398219'
+            'roomId': 'R101'
         };
         if (token != null) {
             socket.send(JSON.stringify(MessageObject));
