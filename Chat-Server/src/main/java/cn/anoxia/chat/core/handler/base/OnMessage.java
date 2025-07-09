@@ -44,13 +44,16 @@ public abstract class OnMessage {
 
             String messageId = redisServer.generateDailyId();
             //文件类型设置相关属性
-            if (msg.getType() == MessageType.file) {
-                for (Attachment item : msg.getAttachment()) {
-                    item.setId(UUID.randomUUID().toString());
-                    item.setMessageId(messageId);
-                    item.setCreatedAt(new Date());
-                    item.setUpdatedAt(new Date());
+            if (msg.getType() == MessageType.file || msg.getType() == MessageType.image || msg.getType() == MessageType.quill || msg.getType() == MessageType.audio || msg.getType() == MessageType.video) {
+                if (msg.getAttachments() != null) {
+                    for (Attachment item : msg.getAttachments()) {
+                        item.setId(UUID.randomUUID().toString());
+                        item.setMessageId(messageId);
+                        item.setCreatedAt(new Date());
+                        item.setUpdatedAt(new Date());
+                    }
                 }
+
             }
 
             msg.setMessageId(messageId);

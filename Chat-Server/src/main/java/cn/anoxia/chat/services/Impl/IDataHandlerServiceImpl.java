@@ -188,8 +188,8 @@ public class IDataHandlerServiceImpl implements IDataHandlerService {
             }
 
             for (ChatMessage msg : allMessages) {
-                if (msg.getType() == MessageType.file && msg.getAttachment() != null) {
-                    for (Attachment att : msg.getAttachment()) {
+                if (msg.getType() == MessageType.file && msg.getAttachments() != null) {
+                    for (Attachment att : msg.getAttachments()) {
                         if (att.getId().equals(id)) {
                             return getAttachmentDetail(id, msg, att);
                         }
@@ -236,8 +236,8 @@ public class IDataHandlerServiceImpl implements IDataHandlerService {
     private List<Attachment> extractAttachments(List<ChatMessage> messages) {
         List<Attachment> attachments = new ArrayList<>();
         for (ChatMessage msg : messages) {
-            if (msg.getAttachment() != null && !msg.getAttachment().isEmpty()) {
-                attachments.addAll(msg.getAttachment());
+            if (msg.getAttachments() != null && !msg.getAttachments().isEmpty()) {
+                attachments.addAll(msg.getAttachments());
             }
         }
         return attachments;
@@ -386,7 +386,7 @@ public class IDataHandlerServiceImpl implements IDataHandlerService {
                 Map<String, List<Attachment>> attMap = atts.stream()
                         .collect(Collectors.groupingBy(Attachment::getMessageId));
                 finalList.forEach(m ->
-                        m.setAttachment(attMap.getOrDefault(m.getMessageId(), List.of()))
+                        m.setAttachments(attMap.getOrDefault(m.getMessageId(), List.of()))
                 );
             }
 
