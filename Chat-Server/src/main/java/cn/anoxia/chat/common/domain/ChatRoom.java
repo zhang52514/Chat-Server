@@ -19,8 +19,6 @@ public class ChatRoom {
     private String roomName;
     private String roomAvatar;
     private String roomDescription;
-    private String roomLastMessage;
-    private LocalDateTime roomLastMessageTime;
     private ChatRoomStatus roomStatus;
     private ChatRoomType roomType;
     private LocalDateTime createdAt;
