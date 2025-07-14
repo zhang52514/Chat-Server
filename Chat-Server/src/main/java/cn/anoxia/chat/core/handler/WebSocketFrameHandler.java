@@ -6,7 +6,9 @@ import cn.anoxia.chat.common.domain.ChatMessage;
 import cn.anoxia.chat.common.domain.HttpMessage;
 import cn.anoxia.chat.common.domain.dto.RequestDto;
 import cn.anoxia.chat.common.domain.dto.ResponseDto;
+import cn.anoxia.chat.common.enmu.MessageType;
 import cn.anoxia.chat.core.handler.auth.AuthHandler;
+import cn.anoxia.chat.core.handler.chat.CallHandler;
 import cn.anoxia.chat.core.handler.chat.ReadReceiptHandler;
 import cn.anoxia.chat.core.handler.chat.SingleChatHandler;
 import cn.anoxia.chat.core.handler.http.HttpHandler;
@@ -33,6 +35,7 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<RequestDt
     private final AuthHandler authHandler;
     private final SingleChatHandler singleChatHandler;
     private final ReadReceiptHandler readReceiptHandler;
+    private final CallHandler callHandler;
     private final HttpHandler httpHandler;
 
 
@@ -41,6 +44,7 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<RequestDt
         httpHandler = applicationContext.getBean(HttpHandler.class);
         authHandler = applicationContext.getBean(AuthHandler.class);
         singleChatHandler = applicationContext.getBean(SingleChatHandler.class);
+        callHandler = applicationContext.getBean(CallHandler.class);
         readReceiptHandler = applicationContext.getBean(ReadReceiptHandler.class);
     }
 
@@ -54,6 +58,15 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<RequestDt
 
         //聊天消息
         if (msg instanceof ChatMessage chatMsg) {
+            if (chatMsg.getType() == MessageType.signal ||
+                    chatMsg.getType() == MessageType.videoCall ||
+                    chatMsg.getType() == MessageType.videoHangup ||
+                    chatMsg.getType() == MessageType.videoAnswer ||
+                    chatMsg.getType() == MessageType.videoReject) {
+
+                this.callHandler.execute(ctx, chatMsg, this.dataHandlerService); // 新增通话处理器
+                return;
+            }
             this.singleChatHandler.execute(ctx, chatMsg, this.dataHandlerService);
             return;
         }

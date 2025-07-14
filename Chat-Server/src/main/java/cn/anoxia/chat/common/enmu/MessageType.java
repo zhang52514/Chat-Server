@@ -15,4 +15,9 @@ public enum MessageType {
     emoji,
     system, // 系统通知
     aiReply, // AI回复（特化处理）
+    videoCall, // 视频通话请求
+    videoAnswer, // 视频通话接听
+    videoReject, // 视频通话拒绝
+    videoHangup, // 视频挂断
+    signal, // SDP、ICE等信令
 }
