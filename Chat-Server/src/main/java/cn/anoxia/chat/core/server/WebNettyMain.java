@@ -4,10 +4,7 @@ import cn.anoxia.chat.core.handler.WebSocketFrameHandler;
 import cn.anoxia.chat.core.codec.JsonMessageDecoder;
 import cn.anoxia.chat.core.codec.JsonMessageEncoder;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -44,6 +41,11 @@ public class WebNettyMain {
         ServerBootstrap serverBootstrapWeb = new ServerBootstrap();
         serverBootstrapWeb.group(BossGroup, WorkerGroup);
         serverBootstrapWeb.channel(NioServerSocketChannel.class);
+        //设置服务端套接字（ServerSocketChannel）所能接收的连接请求队列的最大长度为 1024。
+        serverBootstrapWeb.option(ChannelOption.SO_BACKLOG,1024);
+        //开启TCP KeepAlive 机制，表示服务端和客户端长时间无数据通信时，仍会保持连接活性检测
+        serverBootstrapWeb.childOption(ChannelOption.SO_KEEPALIVE, true);
+
         serverBootstrapWeb.childHandler(new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(SocketChannel ch) {
